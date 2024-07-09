@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Gtc.Models.FederalRegister;
+namespace Gtc.Models;
 
 public static class ListExtensions
 {
