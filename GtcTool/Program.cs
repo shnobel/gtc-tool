@@ -1,6 +1,12 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿using GtcTool.Services;
 
-using Gtc.Services;
-
-var response = FederalRegisterService.GetFederalRegisterResponse();
-Console.WriteLine(response);
+var client = new HttpClient();
+try
+{
+    var response = await FederalRegisterService.GetResponseAsync(client);
+    Console.WriteLine(response);
+}
+catch (Exception)
+{
+    Console.WriteLine("There was an error calling the Federal Register API.");
+}
