@@ -1,21 +1,50 @@
-using Gtc.Models.FederalRegister;
+﻿using Gtc.Models.FederalRegister;
+using System.Text.Json;
 
-namespace Gtc.Services;
-
-public class FederalRegisterService
+namespace GtcTool.Services
 {
-    public static Response GetFederalRegisterResponse()
+    public class FederalRegisterService
     {
-        Agency a = new Agency("DEPARTMENT OF AGRICULTURE", "Agriculture Department", 12, 
-            "https://...", "https://...", 12, "agriculture-department");
-        Document d = new Document("title", "type", "abstract",
-            "asdp123kp", "url", "pdfUrl", "url", "date", "exrec");
-        d.Agencies.Add(a);
-        Response r = new Response(950363, "All Documents", 50,
-            "https://www.federalregister.gov/api/v1/documents?format=json&page=2&per_page=20");
-        r.Results.Add(d);
+        public static async Task<string> GetResponseJsonAsync(HttpClient client)
+        {
+            try
+            {
+                //TODO split base url and endpoint, config
+                using HttpResponseMessage msg = await client.GetAsync("https://www.federalregister.gov/api/v1/documents.json?conditions[publication_date][year]=2023&conditions[agencies][]=agriculture-department");
+                msg.EnsureSuccessStatusCode();
+                return await msg.Content.ReadAsStringAsync();
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine("\nException Caught!");
+                Console.WriteLine($"Message {ex.Message}");
+                return string.Empty;
+            }
+        }
 
-        return r;
+        public static async Task<Response> GetResponseAsync(HttpClient client)
+        {
+            var str = await GetResponseJsonAsync(client);
+            if (str == string.Empty)
+            {
+                return new Response();
+            }
+
+            try
+            {
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+                };
+                var response = JsonSerializer.Deserialize<Response>(str, options);
+                return response ?? new Response();
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine("JSON is invalid");
+                Console.WriteLine(ex);
+                return new Response();
+            }
+        }
     }
 }
-
