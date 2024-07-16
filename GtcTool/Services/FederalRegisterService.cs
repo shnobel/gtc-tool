@@ -1,31 +1,53 @@
 ﻿using Gtc.Models.FederalRegister;
 using System.Text.Json;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace GtcTool.Services
 {
-    public class FederalRegisterService
+    public class FederalRegisterService(
+        IConfiguration config,
+        ILogger<FederalRegisterService> logger,
+        HttpClient client)
     {
-        public static async Task<string> GetResponseJsonAsync(HttpClient client)
+        private readonly IConfiguration _config = config ?? throw new ArgumentException(nameof(config));
+        private readonly ILogger<FederalRegisterService> _logger = logger ?? throw new ArgumentException(nameof(logger));
+        private readonly HttpClient _client = client ?? throw new ArgumentException(nameof(client));
+
+        private async Task<string> GetResponseJsonAsync()
         {
+            //TODO move to config reader extension
+            var baseUrl = _config["FederalRegister:BaseUrl"];
+            if (string.IsNullOrEmpty(baseUrl))
+            {
+                throw new ArgumentException("Base URL is not configured properly.");
+            }
+            
+            var queryEndpoint = _config["FederalRegister:Documents"];
+            if (string.IsNullOrEmpty(queryEndpoint))
+            {
+                throw new ArgumentException("Query Endpoint is not configured properly.");
+            }
+            
             try
             {
-                //TODO split base url and endpoint, config
-                using HttpResponseMessage msg = await client.GetAsync("https://www.federalregister.gov/api/v1/documents.json?conditions[publication_date][year]=2023&conditions[agencies][]=agriculture-department");
+                var baseUri = new Uri(baseUrl);
+                var uri = new Uri(baseUri, queryEndpoint);
+                using HttpResponseMessage msg = await _client.GetAsync(uri);
                 msg.EnsureSuccessStatusCode();
                 return await msg.Content.ReadAsStringAsync();
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine("\nException Caught!");
-                Console.WriteLine($"Message {ex.Message}");
+                _logger.LogError(ex, "Error fetching data from Federal Register API.");
                 return string.Empty;
             }
         }
 
-        public static async Task<Response> GetResponseAsync(HttpClient client)
+        public async Task<Response> GetResponseAsync()
         {
-            var str = await GetResponseJsonAsync(client);
-            if (str == string.Empty)
+            var responseJson = await GetResponseJsonAsync();
+            if (string.IsNullOrEmpty(responseJson))
             {
                 return new Response();
             }
@@ -36,13 +58,12 @@ namespace GtcTool.Services
                 {
                     PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
                 };
-                var response = JsonSerializer.Deserialize<Response>(str, options);
+                var response = JsonSerializer.Deserialize<Response>(responseJson, options);
                 return response ?? new Response();
             }
             catch (JsonException ex)
             {
-                Console.WriteLine("JSON is invalid");
-                Console.WriteLine(ex);
+                _logger.LogError(ex, "Invalid JSON response from Federal Register API.");
                 return new Response();
             }
         }
