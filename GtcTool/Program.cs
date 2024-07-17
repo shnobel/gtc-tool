@@ -1,10 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
 using GtcTool.Services;
+using GtcTool.Utils;
 using Microsoft.Extensions.Logging;
 
 //Init log
 using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
-var federalRegisterLogger = factory.CreateLogger<FederalRegisterService>();
+var logger = factory.CreateLogger("Gtc-tool");
 
 //Init config
 var builder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
@@ -12,9 +13,10 @@ var config = builder.Build();
 
 //Init http client
 var client = new HttpClient();
+var apiClient = new ApiClient(client, config, logger);
 
 //Init services
-var federalRegisterService = new FederalRegisterService(config, federalRegisterLogger, client);
+var federalRegisterService = new FederalRegisterService(apiClient, logger);
 
 try
 {

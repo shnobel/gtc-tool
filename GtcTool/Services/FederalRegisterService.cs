@@ -1,52 +1,26 @@
 ﻿using Gtc.Models.FederalRegister;
 using System.Text.Json;
-using Microsoft.Extensions.Configuration;
+using GtcTool.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace GtcTool.Services
 {
-    public class FederalRegisterService(
-        IConfiguration config,
-        ILogger<FederalRegisterService> logger,
-        HttpClient client)
+    public class FederalRegisterService
     {
-        private readonly IConfiguration _config = config ?? throw new ArgumentException(nameof(config));
-        private readonly ILogger<FederalRegisterService> _logger = logger ?? throw new ArgumentException(nameof(logger));
-        private readonly HttpClient _client = client ?? throw new ArgumentException(nameof(client));
+        private const string ConfigBaseUrlKey = "FederalRegister:BaseUrl";
+        private const string ConfigQueryEndpointKey = "FederalRegister:Documents";
 
-        private async Task<string> GetResponseJsonAsync()
+        private readonly ApiClient _client;
+        private readonly ILogger _logger;
+        public FederalRegisterService(ApiClient client, ILogger logger)
         {
-            //TODO move to config reader extension
-            var baseUrl = _config["FederalRegister:BaseUrl"];
-            if (string.IsNullOrEmpty(baseUrl))
-            {
-                throw new ArgumentException("Base URL is not configured properly.");
-            }
-            
-            var queryEndpoint = _config["FederalRegister:Documents"];
-            if (string.IsNullOrEmpty(queryEndpoint))
-            {
-                throw new ArgumentException("Query Endpoint is not configured properly.");
-            }
-            
-            try
-            {
-                var baseUri = new Uri(baseUrl);
-                var uri = new Uri(baseUri, queryEndpoint);
-                using HttpResponseMessage msg = await _client.GetAsync(uri);
-                msg.EnsureSuccessStatusCode();
-                return await msg.Content.ReadAsStringAsync();
-            }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, "Error fetching data from Federal Register API.");
-                return string.Empty;
-            }
+            _logger = logger ?? throw new ArgumentException(nameof(logger));
+            _client = client ?? throw new ArgumentException(nameof(client));
         }
 
         public async Task<Response> GetResponseAsync()
         {
-            var responseJson = await GetResponseJsonAsync();
+            var responseJson = await _client.GetResponseJsonAsync(ConfigBaseUrlKey, ConfigQueryEndpointKey);
             if (string.IsNullOrEmpty(responseJson))
             {
                 return new Response();
