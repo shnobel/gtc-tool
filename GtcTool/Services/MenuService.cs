@@ -1,9 +1,10 @@
 ﻿using Gtc.Models;
-using GtcTool.Services;
+using GtcTool.Services.Congress;
+using GtcTool.Services.FederalRegister;
 
 namespace Gtc.Services;
 
-class MenuService
+public class MenuService
 {
     private readonly FederalRegisterService _federalRegisterService;
     private readonly CongressService _congressService;

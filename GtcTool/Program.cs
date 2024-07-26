@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
-using GtcTool.Services;
+﻿using Gtc.Services;
+using GtcTool.Services.Congress;
+using GtcTool.Services.FederalRegister;
+using GtcTool.Services.Storage;
 using GtcTool.Utils;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Gtc.Services;
 
 //Init log
 using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
@@ -16,10 +18,14 @@ var config = builder.Build();
 var client = new HttpClient();
 var apiClient = new ApiClient(client, config, logger);
 
+//Init memory services
+var memoryService = new MemoryStorageService();
+var fileService = new FileStorageService(logger);
+
 //Init services
-var federalRegisterService = new FederalRegisterService(apiClient, logger);
-var congressService = new CongressService(apiClient, logger);
+var federalRegisterMemoryService = new FederalRegisterMemoryService(memoryService, apiClient, logger);
+var congressFileService = new CongressFileService(fileService, apiClient, logger);
 
 //Init menu
-var menu = new MenuService(federalRegisterService, congressService);
+var menu = new MenuService(federalRegisterMemoryService, congressFileService);
 await menu.ShowMenu();

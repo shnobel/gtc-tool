@@ -3,7 +3,7 @@ using System.Text.Json;
 using GtcTool.Utils;
 using Microsoft.Extensions.Logging;
 
-namespace GtcTool.Services
+namespace GtcTool.Services.FederalRegister
 {
     public class FederalRegisterService
     {
@@ -18,7 +18,7 @@ namespace GtcTool.Services
             _client = client ?? throw new ArgumentException(nameof(client));
         }
 
-        public async Task<Response> GetResponseAsync()
+        public virtual async Task<Response> GetResponseAsync()
         {
             var responseJson = await _client.GetResponseJsonAsync(ConfigBaseUrlKey, ConfigQueryEndpointKey);
             if (string.IsNullOrEmpty(responseJson))

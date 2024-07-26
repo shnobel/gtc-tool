@@ -30,11 +30,11 @@ public class ApiClient
         {
             throw new ArgumentException("Query Endpoint is not configured properly.");
         }
-        
+
         var baseUri = new Uri(baseUrl);
         Uri uri;
 
-        if (!string.IsNullOrEmpty(apiKey)) 
+        if (!string.IsNullOrEmpty(apiKey))
         {
             //TODO consider to improve this part later in case we extend services with different API
             var congressApiKey = _config.GetSection("Gtc");
@@ -50,9 +50,14 @@ public class ApiClient
             msg.EnsureSuccessStatusCode();
             return await msg.Content.ReadAsStringAsync();
         }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, "There was a timeout.");
+            return string.Empty;
+        }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "Error fetching data from Federal Register API.");
+            _logger.LogError(ex, "There was an error with the request.");
             return string.Empty;
         }
     }
