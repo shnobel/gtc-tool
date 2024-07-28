@@ -35,12 +35,25 @@ namespace GtcTool.Services.Storage
                     buffer = new char[(int)sr.BaseStream.Length];
                     await sr.ReadAsync(buffer, 0, (int)sr.BaseStream.Length);
                 }
-                return JsonSerializer.Deserialize<T>(buffer);
+
+                var result = JsonSerializer.Deserialize<T>(buffer);
+
+                if (result == null)
+                {
+                    throw new InvalidOperationException("Deserialization returned null");
+                }
+
+                return result;
             }
             catch (FileNotFoundException ex)
             {
                 _logger.LogError(ex, "No such file");
                 return default;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred during deserialization");
+                throw new InvalidOperationException("Failed to deserialize the object", ex);
             }
         }
     }

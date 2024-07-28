@@ -24,8 +24,11 @@ var fileService = new FileStorageService(logger);
 
 //Init services
 var federalRegisterMemoryService = new FederalRegisterMemoryService(memoryService, apiClient, logger);
+var congressService = new CongressService(apiClient, logger);
 var congressFileService = new CongressFileService(fileService, apiClient, logger);
+var congressComparerService = new CongressComparerService();
+var congressAnalysisService = new CongressAnalysisService(congressService, congressFileService, congressComparerService, logger);
 
 //Init menu
-var menu = new MenuService(federalRegisterMemoryService, congressFileService);
+var menu = new MenuService(federalRegisterMemoryService, congressFileService, congressAnalysisService);
 await menu.ShowMenu();

@@ -20,7 +20,7 @@ public class CongressService
         _client = client ?? throw new ArgumentException(nameof(client));
     }
 
-    public virtual async Task<CongressResponse?> GetCongressResponseAsync()
+    public virtual async Task<CongressResponse> GetCongressResponseAsync()
     {
         var responseJson = await _client.GetResponseJsonAsync(ConfigBaseUrlKey, ConfigQueryEndpointKey, ConfigSecretApiKey);
         if (string.IsNullOrEmpty(responseJson))
@@ -44,7 +44,7 @@ public class CongressService
         }
     }
 
-    public async Task<(CongressResponse? response, List<Package> packages)> GetCongressResponseWithPackagesAsync()
+    public async Task<(CongressResponse response, List<Package> packages)> GetCongressResponseWithPackagesAsync()
     {
         var congressResponse = await GetCongressResponseAsync();
         var packages = GetSpecificPackages(congressResponse);

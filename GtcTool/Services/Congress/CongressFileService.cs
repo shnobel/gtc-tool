@@ -16,7 +16,7 @@ namespace GtcTool.Services.Congress
             _fileStorageService = new FileStorageService(logger);
         }
 
-        public override async Task<CongressResponse?> GetCongressResponseAsync()
+        public override async Task<CongressResponse> GetCongressResponseAsync()
         {
             var data = await _fileStorageService.GetObjectFromFileAsync<CongressResponse>(FileName);
             if (data == null)
